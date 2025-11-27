@@ -1,5 +1,6 @@
 import random 
 import itertools
+import PIL.Image
 from pathlib import Path
 from typing import Dict, List 
 from moviepy.editor import (
@@ -11,7 +12,11 @@ from moviepy.editor import (
     afx,
 )
 
+if not hasattr(PIL.Image, 'ANTIALIAS'):
+    PIL.Image.ANTIALIAS = PIL.Image.LANCZOS
+
 RESOLUTION = (1080, 1920)
+
 
 def create_video(
     video_blocks: Dict[str, List[Path]],
@@ -19,9 +24,9 @@ def create_video(
     tts_files: List[Path],
     task_name: str,
     output_folder: Path
-) -> Path:
+) -> List[Path]:
     
-    print(f"Starting creating video in {output_path.name}")
+    print(f"Starting creating video in {output_folder.name}")
 
     generated = []
 
@@ -68,7 +73,7 @@ def create_video(
                 bg_music = AudioFileClip(str(music_path))
                 res_to_close.append(bg_music)
 
-                bg_music = bg_music.vol(0.2)
+                bg_music = bg_music.volumex(0.2)
 
                 duration = max(final_video.duration, voice_audio.duration if voice_audio else 0)
                 bg_music= afx.audio_loop(bg_music, duration=duration)
@@ -76,7 +81,7 @@ def create_video(
 
             
             audio_layers = []
-            if voice_audio: audio_layers.apend(voice_audio)
+            if voice_audio: audio_layers.append(voice_audio)
             if background_audio: audio_layers.append(background_audio)
 
             if audio_layers:
@@ -107,5 +112,6 @@ def create_video(
                 try: res.close()
                 except: pass
 
-
+    if not generated:
+        raise RuntimeError("Error! Any video doesn't created")
     return generated 
