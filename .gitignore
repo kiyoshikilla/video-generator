@@ -1,0 +1,11 @@
+__pycache__/
+
+venv/
+env/
+ENV/
+.venv
+.vscode
+.env
+
+manual_test.py 
+test_sandbox/
