@@ -56,8 +56,7 @@ def create_video(
 
             voice_audio = None
             if tts_files:
-                tts_index = i % len(tts_files)
-                tts_path = tts_files[tts_index]
+                tts_path = tts_files[i]
                 ac = AudioFileClip(str(tts_path))
                 res_to_close.append(ac)
 
