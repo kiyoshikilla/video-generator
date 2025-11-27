@@ -56,13 +56,13 @@ def create_video(
 
             voice_audio = None
             if tts_files:
-                tts_clips = []
-                for tts_path in tts_files:
-                    ac = AudioFileClip(str(tts_path))
-                    tts_clips.append(ac)
-                    res_to_close.append(ac)
-                if tts_clips:
-                    voice_audio = concatenate_audioclips(tts_clips)
+                tts_index = i % len(tts_files)
+                tts_path = tts_files[tts_index]
+                ac = AudioFileClip(str(tts_path))
+                res_to_close.append(ac)
+
+                voice_audio = ac.set_start(0)
+
                 
 
             background_audio = None
