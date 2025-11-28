@@ -26,7 +26,7 @@ VOICE_MAPPING = {
 def refresh_voice_cache():
     global _VOICE_CACHE
     try:
-        print("🔄 Оновлюю список голосів з ElevenLabs API...")
+        print("Refreshing the list of voices from Elevenlabs")
         response = elevenlabs.voices.get_all()
         
         new_cache = {}
@@ -34,10 +34,10 @@ def refresh_voice_cache():
             new_cache[voice.name.lower()] = voice.voice_id
             
         _VOICE_CACHE = new_cache
-        print(f"✅ Завантажено {len(_VOICE_CACHE)} голосів у кеш.")
+        print(f"Successfully loaded {len(_VOICE_CACHE)} voices to the cache.")
         
     except Exception as e:
-        print(f"⚠️ Не вдалося отримати список голосів: {e}. Використовую стандартні.")
+        print(f"Cant get a list of voices: {e}. Using the standart list.")
         for name, vid in VOICE_MAPPING.items():
             _VOICE_CACHE[name.lower()] = vid
 
