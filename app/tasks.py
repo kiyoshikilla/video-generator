@@ -7,9 +7,9 @@ from app.models import VideoProcessingRequest
 from app.services.download import download_video
 from app.services.elevenlabs import generate_tts
 from app.services.video_constructor import create_video
+from app.services.storage import get_storage
 
-MEDIA_ROOT = Path("media_output")
-MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+
 
 def run_async(coro):
     return asyncio.run(coro)
@@ -90,19 +90,17 @@ def process_video(self, request_data: dict):
         except Exception as e:
             return {"status": "error", "message": f"Render failed: {e}"}
         
+
+        storage_service = get_storage()
         final_path = []
-        final_task_dir = MEDIA_ROOT / request.task_name
-        final_task_dir.mkdir(parents=True, exist_ok=True)
 
-
-        print(f"Saving to {final_task_dir}")
+        print(f"Saving to local + google drive")
+        
         for temp_file in results:
             temp_path = Path(temp_file)
             if temp_path.exists():
-                new_path = final_task_dir / temp_path.name
-                shutil.copy2(temp_path, new_path)
-                final_path.append(str(new_path.absolute()))
-
+                public_link = storage_service.upload(temp_path, request.task_name)
+                final_path.append(public_link)
 
         return {
             "status": "ok, completed",
