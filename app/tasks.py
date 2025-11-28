@@ -8,11 +8,16 @@ from app.services.download import download_video
 from app.services.elevenlabs import generate_tts
 from app.services.video_constructor import create_video
 from app.services.storage import get_storage
-
+import traceback
 
 
 def run_async(coro):
-    return asyncio.run(coro)
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop.run_until_complete(coro)
 
 
 @app.task(bind=True)
@@ -67,7 +72,10 @@ def process_video(self, request_data: dict):
             return local_video_blocks, local_audio_blocks
         
         print("Downloading assets. Wait")
-        video_paths, audio_path = run_async(download_all_assets())
+        try:
+            video_paths, audio_path = run_async(download_all_assets())
+        except Exception as e:
+            return {"status": "error", "message": f"Download failed: {e}"}
 
 
         local_tts_files = []
@@ -99,8 +107,14 @@ def process_video(self, request_data: dict):
         for temp_file in results:
             temp_path = Path(temp_file)
             if temp_path.exists():
-                public_link = storage_service.upload(temp_path, request.task_name)
-                final_path.append(public_link)
+                try:
+                    public_link = storage_service.upload(temp_path, request.task_name)
+                    final_path.append(public_link)
+                except Exception as e:
+                    print(f"[CRITICAL ERROR] GDrive upload failed for {temp_path.name}: {e}")
+                    traceback.print_exc() 
+                    final_path.append(str(temp_path.absolute()))
+                    continue
 
         return {
             "status": "ok, completed",
