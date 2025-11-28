@@ -12,14 +12,7 @@ elevenlabs = ElevenLabs(
     api_key=os.getenv("ELEVENLABS_API")
     )
 
-PREMADE_VOICES = [
-    'pNInz6obpgDQGcFmaJgB', # Adam
-    'Xb7hH8MSUJpSbSDYk0k2', # Alice
-    'pqHfZKP75CvOlQylNhV4', # Bill
-    'nPczCjzI2devNBz1zQrb', # Brian
-    'IKne3meq5aSn9XLyUdCD', # Charlie
-    'onwK4e9ZLuTAKqWW03F9', # Daniel
-    ]
+_VOICE_CACHE = {}
 
 VOICE_MAPPING = {
     "Adam": "pNInz6obpgDQGcFmaJgB", 
@@ -30,21 +23,56 @@ VOICE_MAPPING = {
     "Daniel": "onwK4e9ZLuTAKqWW03F9", 
 }
 
+def refresh_voice_cache():
+    global _VOICE_CACHE
+    try:
+        print("🔄 Оновлюю список голосів з ElevenLabs API...")
+        response = elevenlabs.voices.get_all()
+        
+        new_cache = {}
+        for voice in response.voices:
+            new_cache[voice.name.lower()] = voice.voice_id
+            
+        _VOICE_CACHE = new_cache
+        print(f"✅ Завантажено {len(_VOICE_CACHE)} голосів у кеш.")
+        
+    except Exception as e:
+        print(f"⚠️ Не вдалося отримати список голосів: {e}. Використовую стандартні.")
+        for name, vid in VOICE_MAPPING.items():
+            _VOICE_CACHE[name.lower()] = vid
+
+def get_voice_id(voice_input: str) -> str:
+
+    if not _VOICE_CACHE:
+        refresh_voice_cache()
+
+    input_lower = voice_input.lower()
+
+    if input_lower == "random":
+        if _VOICE_CACHE:
+            random_name = random.choice(list(_VOICE_CACHE.keys()))
+            return _VOICE_CACHE[random_name]
+        return VOICE_MAPPING["Adam"]
+
+    if input_lower in _VOICE_CACHE:
+        return _VOICE_CACHE[input_lower]
+    
+    return voice_input
+
 def random_voice() -> str:
 
-    voice_id = random.choice(PREMADE_VOICES)
+    voice_id = random.choice(VOICE_MAPPING)
     return voice_id 
     
 
 def generate_tts(text: str, output_dir: Path, voice_id: str = "random"):
    
-    if voice_id == "random":
-        voice_id = random_voice()
-        print(f"Random voice selected: {voice_id}")
-
     try:
+
+        real_voice_id = get_voice_id(voice_id)
+    
         response = elevenlabs.text_to_speech.convert(
-            voice_id=voice_id,
+            voice_id=real_voice_id,
             output_format="mp3_44100_128",
             text=text,
             model_id="eleven_multilingual_v2",
@@ -61,4 +89,5 @@ def generate_tts(text: str, output_dir: Path, voice_id: str = "random"):
         print(f"Voice successfully saved")
         return file_path
     except Exception as e:
-        raise RuntimeError(f"Elevenlabs critical error: {e}")
+        print(f"Elevenlabs error (Voice - {voice_id}: {e})")
+        return None
