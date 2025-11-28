@@ -10,3 +10,5 @@ ENV/
 manual_test.py 
 test_sandbox/
 media_output/
+
+drive_key.json
