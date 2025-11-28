@@ -32,6 +32,15 @@ def create_video(
 
     all_comb = list(itertools.product(*video_blocks.values()))
     
+    all_music = []
+    if audio_blocks:
+        all_music = [p for sublist in audio_blocks.values() for p in sublist]
+
+
+    tts_iterator = None
+    if tts_files:
+        tts_iterator = itertools.cycle(tts_files)
+
     for i, combo in enumerate(all_comb):
 
         output_file = f"{task_name}_comb_{i}.mp4"
@@ -56,7 +65,7 @@ def create_video(
 
             voice_audio = None
             if tts_files:
-                tts_path = tts_files[i]
+                tts_path = next(tts_iterator)
                 ac = AudioFileClip(str(tts_path))
                 res_to_close.append(ac)
 
