@@ -1,20 +1,25 @@
-import requests 
+import aiohttp
+import aiofiles
 from pathlib import Path
 
 
-def download_video(url: str, destination: Path) -> Path:
+async def download_video(url: str, destination: Path) -> Path:
     destination.parent.mkdir(parents=True, exist_ok=True)
 
     print(f"Downloading: from {url} to {destination}")
 
     try:
-        with requests.get(url, stream= True, timeout= 30) as r:
-            r.raise_for_status()
 
-            with open(destination, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)        
+        timeout = aiohttp.ClientTimeout(total=90)
+
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(url) as r:
+                r.raise_for_status()
+
+                async with aiofiles.open(destination, 'wb') as f:
+                    async for chunk in r.content.iter_chunked(8192):
+                        if chunk:
+                            await f.write(chunk)        
         return destination
     
     except Exception as e:

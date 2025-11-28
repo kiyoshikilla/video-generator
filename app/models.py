@@ -3,20 +3,13 @@ from pydantic import BaseModel, Field, HttpUrl
 from typing import Dict, List
 
 
-class VoiceOption(str, Enum):
-    SARAH = "Sarah"
-    GEORGE = "George"
-    WILL = "Will"
-    RANDOM = "Random"
-
-
 class TextTS(BaseModel):
     text: str = Field(
         ...,
         min_length=1,
         max_length=1000
     )
-    voice: VoiceOption = Field(
+    voice: str = Field(
         ...,
         description="Choose the voice for your text"
     )
