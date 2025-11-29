@@ -1,30 +1,27 @@
-import requests
+import aiohttp
+import aiofiles
 from pathlib import Path
 
-def download_video(url: str, dest_path: Path) -> bool:
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://www.google.com/'
-    }
+
+async def download_video(url: str, destination: Path) -> Path:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    print(f"Downloading: from {url} to {destination}")
 
     try:
-        print(f"Downloading: {url}")
-        
-        with requests.get(url, stream=True, headers=headers, timeout=60) as r:
-            r.raise_for_status() 
-            
-            dest_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(dest_path, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=64 * 1024):
-                    if chunk:
-                        f.write(chunk)
-                        
-        print(f"Success: {dest_path.name}")
-        return True
+        timeout = aiohttp.ClientTimeout(total=90)
 
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(url) as r:
+                r.raise_for_status()
+
+                async with aiofiles.open(destination, 'wb') as f:
+                    async for chunk in r.content.iter_chunked(8192):
+                        if chunk:
+                            await f.write(chunk)        
+        return destination
+    
     except Exception as e:
-        print(f"Download failed for {url}: {e}")
-        if dest_path.exists():
-            dest_path.unlink()
-        return False
+        print(f"Error downloading video from {url}: {e}")
+        raise e
