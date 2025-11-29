@@ -9,6 +9,7 @@ from app.services.elevenlabs import generate_tts
 from app.services.video_constructor import create_video
 from app.services.storage import get_storage
 import traceback
+import time
 
 
 def run_async(coro):
@@ -22,7 +23,9 @@ def run_async(coro):
 
 @app.task(bind=True)
 def process_video(self, request_data: dict):
-    
+    start_time = time.time()
+
+
     try:
         request = VideoProcessingRequest(**request_data)
     except Exception as e:
@@ -116,10 +119,17 @@ def process_video(self, request_data: dict):
                     final_path.append(str(temp_path.absolute()))
                     continue
 
+        execution_time = time.time() - start_time
+
         return {
             "status": "ok, completed",
             "task_id": task_id,
             "task_name": request.task_name,
             "generated_files": final_path,
-            "count": len(results)
+            "count": len(results),
+            "metrics": {
+                "total_duration_sec": round(execution_time, 2),
+                "files_count": len(results),
+                "avg_time_per_file": round(execution_time / len(results), 2) if results else 0
+            }
         }
