@@ -16,4 +16,4 @@ COPY . .
 
 RUN mkdir -p media_output
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000 & celery -A app.celery_app worker --loglevel=info"]
+CMD ["sh", "-c", "celery -A app.celery_app worker --loglevel=info --concurrency=1 --max-tasks-per-child=1 & uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
