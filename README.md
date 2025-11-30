@@ -32,15 +32,13 @@
 
 ## 🛠 Стек технологій
 
-* **Language:** Python 3.11
-* **Web Framework:** FastAPI
-* **Task Queue:** Celery
-* **Message Broker:** Redis
-* **Video Processing:** MoviePy (FFmpeg wrapper)
-* **TTS Provider:** ElevenLabs API
-* **Storage:** Google Cloud Storage (GCS) / Local Filesystem
-* **Observability:** Sentry, Structured Logging
-* **Containerization:** Docker & Docker Compose
+* **Веб фреймворк:** FastAPI
+* **Черга завдань:** Celery
+* **Брокер:** Redis
+* **Робота з відео:** MoviePy
+* **Реалізація text to speech:** ElevenLabs API
+* **Сховище:** Google Cloud Storage (GCS) / Локально
+* **Контейнеризація:** Docker & Docker Compose
 
 ---
 
